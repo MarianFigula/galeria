@@ -53,9 +53,9 @@
             </div>
 
         </div>
-        <button type="button" id="slideshow-button" onclick="switchButtons('stop-slideshow-button','slideshow-button')">SlideShow</button>
+        <button type="button" id="slideshow-button">SlideShow</button>
         <button type="button" id="button-close">Zavrieť</button>
-        <button type="button" id="stop-slideshow-button" onclick="switchButtons('slideshow-button','stop-slideshow-button')">Ukončiť slideShow</button>
+        <button type="button" id="stop-slideshow-button">Ukončiť slideShow</button>
         <br>
     </div>
 
@@ -70,8 +70,6 @@
 
 
 <script>
-    // todo - dat switchbutton on click do js
-
     const section = document.querySelector("section");
     const filter = document.querySelector("#filter");
     const backdrop = document.querySelector(".backdrop")
@@ -91,8 +89,6 @@
     const galeria = document.getElementById("galeria-container")
     var pomocnePole = []
     var pomocnePole2 = []
-    //pomocnePole.push(galeria);
-    //console.log("pomocnePole",pomocnePole)
 
     var pole = []
     var displayedImageSrc;
@@ -100,9 +96,6 @@
     var animate;
     var index;
     var startAnimation = false;
-
-    //pomocnePole.push(galeria)
-
 
     dragula([document.querySelector("#galeria-container")])
         .on('drop', function (el) {
@@ -115,7 +108,7 @@
             }
 
             //localStorage.removeItem("filenames")
-            localStorage.setItem("filenames", JSON.stringify(pomocnePole))
+            //localStorage.setItem("filenames", JSON.stringify(pomocnePole))
 
             //console.log("---------------ZMENENE POLE -------------")
             for (let i = 0; i < pomocnePole.length; i++) {
@@ -128,14 +121,8 @@
                     }
                 }
             }
-            console.log(pole)
         })
 
-    buttonClose.addEventListener("click", () =>{
-        startAnimation = false;
-        stopSlideShow();
-        backdrop.style.display = "none";
-    })
 
     const filterValue = localStorage.getItem("filter") == null ? "" : localStorage.getItem("filter");
     filter.value = filterValue;
@@ -145,8 +132,9 @@
     })
 
 
+
     const loadImages = (filterString) => {
-        let i = 0;
+
         localStorage.setItem("filter", filterString);
         section.innerHTML = '';
 
@@ -155,6 +143,7 @@
             .then(data => { // data - cely subor
                 //console.log(data)
                 pole = [];
+                pomocnePole = []
                 data.forEach(image => {
 
                     nazovObrazka.innerText = ""
@@ -167,8 +156,8 @@
                         //console.log(image); // for po jednom objekte
                         pole.push(image)
                         const thumbnail = document.createElement("img");
-                        thumbnail.src = pomocnePole[i] // TODO
-                        i++;
+                        pomocnePole.push()
+                        thumbnail.src = `./images/${image.filename}`
                         thumbnail.height = 240;
                         thumbnail.width = 240;
                         thumbnail.style.objectFit = "cover";
@@ -176,7 +165,7 @@
                             backdrop.style.display = "block";
                             modal.innerHTML = "";
                             const modalImage = document.createElement("img")
-                            modalImage.src = `./images/${image.filename}`
+                            modalImage.src = thumbnail.src;
                             modalImage.style.width = "100%";
                             modalImage.style.height = "100%";
                             modalImage.style.objectFit = "cover"
@@ -195,19 +184,8 @@
                 })
 
                 // pushujem do localStorage
-                var children = galeria.children;
 
-                for (let i = 0; i < children.length; i++) {
-                    var child = children[i];
-                    //console.log(child.getAttribute("src"));
-                    pomocnePole.push(child.getAttribute("src"));
-                }
-                console.log(pomocnePole)
-                localStorage.setItem("filenames", JSON.stringify(pomocnePole))
-                //console.log(JSON.parse(localStorage.getItem("filenames")));
             })
-
-
     }
     loadImages(filterValue);
 
@@ -243,17 +221,28 @@
 
     slideShowButton.addEventListener("click", () => {
         getIndex();
+        console.log(index);
         startAnimation = true;
         modalPodObrazkom.style.backgroundColor = "rgba(255,255,255,0.1)";
         infoContainer.style.display = "none";
-        slideShow()
+        slideShow();
+        switchButtons('stop-slideshow-button','slideshow-button')
     })
 
+    buttonClose.addEventListener("click", () =>{
+        index = null;
+        startAnimation = false;
+        stopSlideShow();
+        switchButtons('slideshow-button','stop-slideshow-button')
+        backdrop.style.display = "none";
+    })
 
     function slideShow(){
         //console.log("DISPLAYED IMAGE",displayedImage);
         //console.log("index",index)
         //console.log(pole);
+
+        //console.log(displayedImage)
 
         if (index >= pole.length){
             index = 0;
@@ -264,6 +253,7 @@
 
         displayedImage.style.display = "none";
         displayedImage = document.createElement("img")
+
         displayedImage.src = `./images/${pole[index].filename}`;
 
         nazovObrazka.innerText = pole[index].title;
@@ -278,7 +268,6 @@
         if (startAnimation === true){
             prevImage.style.display = "none"
             nextImage.style.display = "none"
-
             animate = setTimeout(slideShow, 2000);
 
             if (animate != null){
@@ -288,19 +277,20 @@
     }
 
     stopSlideShowButton.addEventListener("click", () => {
-        prevImage.style.display = "block"
-        nextImage.style.display = "block"
+        index--;
         modalPodObrazkom.style.backgroundColor = "rgba(255,255,255,1)";
         stopSlideShow();
+        switchButtons('slideshow-button','stop-slideshow-button')
     });
 
     function stopSlideShow(){
         startAnimation = false;
+        prevImage.style.display = "block"
+        nextImage.style.display = "block"
         infoContainer.style.display = "block";
         modalPodObrazkom.style.backgroundColor = "rgba(255,255,255,1)";
         clearTimeout(animate);
     }
-
 
     function switchButtons(button1, button2){
         document.getElementById(button1).style.display = "inline-block";
