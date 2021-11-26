@@ -140,7 +140,6 @@ button:hover{
 
 .next {
     right: 16%;
-
 }
 
 .prev:hover, .next:hover{
@@ -150,5 +149,6 @@ button:hover{
 
 footer{
     text-align: center;
-   /* padding-bottom: 20px;*/
+    padding-bottom: 20px;
+
 }

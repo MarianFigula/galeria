@@ -8,12 +8,10 @@
           crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.js" referrerpolicy="no-referrer"></script>
     <link rel="stylesheet" href="css/style.css">
-    <!--<script src="https://cdn.jsdelivr.net/npm/@shopify/draggable@1.0.0-beta.11/lib/draggable.bundle.js"></script>
-    Spravene zadanie - okrem localStorage        
--->
+    <!--<script src="https://cdn.jsdelivr.net/npm/@shopify/draggable@1.0.0-beta.11/lib/draggable.bundle.js"></script>-->
 
-   <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
--->
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+ -->
 </head>
 <body>
 
@@ -25,7 +23,7 @@
 
     <h2>Filter obrázkov:</h2>
     <label>
-       <input id="filter" type="text">
+        <input id="filter" type="text">
     </label>
 </div>
 
@@ -34,7 +32,6 @@
 </section>
 
 <div class="backdrop">
-
 
     <div class="modal-okno fade"></div>
     <a class="prev">&#10094;</a>
@@ -86,45 +83,42 @@
     const nextImage = document.querySelector(".next");
     const prevImage = document.querySelector(".prev");
 
-//----------------------------------------------------------//
+    //----------------------------------------------------------//
 
     const galeria = document.getElementById("galeria-container")
-    var pomocnePole = []
-    var pomocnePole2 = []
 
-    var pole = []
+    var storageImages = []
     var displayedImageSrc;
     var displayedImage;
     var animate;
     var index;
     var startAnimation = false;
+    var draggedOverElement;
 
+
+    if (localStorage.getItem("defaultImages") === null){
+        fetch("./images.json")
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(image => {
+                    storageImages.push(image);
+                })
+                localStorage.setItem("defaultImages", JSON.stringify(storageImages));
+                loadImages(filterValue);
+            })
+    }
+
+    /*
     dragula([document.querySelector("#galeria-container")])
-        .on('drop', function (el) {
-            pomocnePole = []
-            var children = galeria.children;
-            for (let i = 0; i < children.length; i++) {
-                var child = children[i];
-                //console.log(child.getAttribute("src"));
-                pomocnePole.push(child.getAttribute("src"));
-            }
-
-            //localStorage.removeItem("filenames")
-            //localStorage.setItem("filenames", JSON.stringify(pomocnePole))
-
-            //console.log("---------------ZMENENE POLE -------------")
-            for (let i = 0; i < pomocnePole.length; i++) {
-                for (let j = 0; j < pole.length; j++) {
-                    if (pomocnePole[i] === `./images/${pole[j].filename}`){
-                //        console.log("skocil som do ifu")
-                        let tmp = pole[i]
-                        pole[i] = pole[j]
-                        pole[j] = tmp;
-                    }
-                }
-            }
+        .on('drag', function (el) {
+            console.log("som drag");
+        })
+        .on('over', function (el){
+            console.log("som over");
         })
 
+
+     */
 
     const filterValue = localStorage.getItem("filter") == null ? "" : localStorage.getItem("filter");
     filter.value = filterValue;
@@ -134,78 +128,117 @@
     })
 
 
-
     const loadImages = (filterString) => {
-
         localStorage.setItem("filter", filterString);
         section.innerHTML = '';
-
-        fetch("./images.json")
-            .then(res => res.json())
-            .then(data => { // data - cely subor
-                //console.log(data)
-                pole = [];
-                pomocnePole = []
-                data.forEach(image => {
-
-                    nazovObrazka.innerText = ""
-                    popisObrazka.innerText = ""
-
-                    if (image.title.toLowerCase().indexOf(filterString) !== -1 ||
-                        image.title.toUpperCase().indexOf(filterString) !== -1 ||
-                        image.title.indexOf(filterString) !== -1)
-                    {
-                        //console.log(image); // for po jednom objekte
-                        pole.push(image)
-                        const thumbnail = document.createElement("img");
-                        pomocnePole.push()
-                        thumbnail.src = `./images/${image.filename}`
-                        thumbnail.height = 240;
-                        thumbnail.width = 240;
-                        thumbnail.style.objectFit = "cover";
-                        thumbnail.addEventListener("click", () => {
-                            backdrop.style.display = "block";
-                            modal.innerHTML = "";
-                            const modalImage = document.createElement("img")
-                            modalImage.src = thumbnail.src;
-                            modalImage.style.width = "100%";
-                            modalImage.style.height = "100%";
-                            modalImage.style.objectFit = "cover"
-
-                            displayedImageSrc = image.filename;
-                            displayedImage = modalImage;
-
-                            modal.appendChild(modalImage);
-                            nazovObrazka.innerText = `${image.title}`
-                            popisObrazka.innerText = `${image.description}`
-                        })
-                        section.appendChild(thumbnail);
+        let pole = JSON.parse(localStorage.getItem("filterImages"));
+        let novePole = [];
 
 
-                    }
-                })
+        if (pole == null || pole.length == 0 || (filterString == "" && (pole.length != 5))){
+            pole = (JSON.parse(localStorage.getItem("defaultImages")));
+        }
+        else {
+            pole = (JSON.parse(localStorage.getItem("filterImages")));
+        }
+        console.log("storeage",storageImages);
+        // data - cely subor
+        //console.log(data);
 
-                // pushujem do localStorage
+        try {
+            pole.forEach(image => {
+                nazovObrazka.innerText = ""
+                popisObrazka.innerText = ""
 
-            })
-    }
-    loadImages(filterValue);
+                if (image.title.toLowerCase().indexOf(filterString) !== -1 ||
+                    image.title.toUpperCase().indexOf(filterString) !== -1 ||
+                    image.title.indexOf(filterString) !== -1)
+                {
+                    //console.log(image); // for po jednom objekte
+                    const thumbnail = document.createElement("img");
+                    thumbnail.src = `./images/${image.filename}`
+                    thumbnail.height = 240;
+                    thumbnail.width = 240;
+                    thumbnail.style.objectFit = "cover";
+                    thumbnail.addEventListener("click", () => {
+                        backdrop.style.display = "block";
+                        modal.innerHTML = "";
+                        const modalImage = document.createElement("img")
+                        modalImage.src = thumbnail.src;
+                        modalImage.style.width = "100%";
+                        modalImage.style.height = "100%";
+                        modalImage.style.objectFit = "cover"
+                        displayedImageSrc = image.filename;
+                        displayedImage = modalImage;
 
-    function getIndex(){
-        if (index == null){
-            for (let i = 0; i < pole.length; i++) {
-                if (pole[i].filename === displayedImageSrc) {
-                    //console.log("zhoduje sa")
-                    index = i;
-                    break;
+                        modal.appendChild(modalImage);
+                        nazovObrazka.innerText = `${image.title}`
+                        popisObrazka.innerText = `${image.description}`
+                    });
+                    thumbnail.addEventListener("dragend", () => {
+                        const tmp = draggedOverElement.src;
+                        let pole = JSON.parse(localStorage.getItem("filterImages"));
+                        //console.log("tmp:",tmp === `./images/${image.filename}`)
+                        draggedOverElement.src = event.target.src;
+                        event.target.src = tmp;
+
+                        // tmp - za co menim, dragover - co menim
+                        let dragFilename = draggedOverElement.src.replace(/^.*[\\\/]/, '');
+                        //console.log("to co chytim",dragFilename)
+                        let changeFilename = tmp.replace(/^.*[\\\/]/, '');
+                        //console.log("to co menim",changeFilename);
+
+                        let index, index1;
+                        for (let i = 0; i < pole.length; i++) {
+                            if (pole[i].filename == dragFilename){
+                                index = i;
+                            }
+                            if (pole[i].filename == changeFilename)
+                                index1 = i;
+                        }
+                        let tmpObject = pole[index];
+                        pole[index] = pole[index1];
+                        pole[index1] = tmpObject;
+                        localStorage.setItem("filterImages", JSON.stringify(pole));
+                    })
+
+                    thumbnail.addEventListener("dragenter", () => {
+                        //console.log(event)
+                        draggedOverElement = event.target;
+                    });
+                    section.appendChild(thumbnail);
+                    novePole.push(image);
+
                 }
+            })
+        }catch (e){
+            return;
+        }
+        console.log("polePo",pole);
+        console.log("novePole:",novePole);
+        localStorage.setItem("filterImages",JSON.stringify(novePole));
+    }
+
+    loadImages(filterValue);
+    function getIndex(){
+        let pole;
+        pole = (JSON.parse(localStorage.getItem("filterImages")));
+
+        console.log("polePreIndex")
+        for (let i = 0; i < pole.length; i++) {
+            if (pole[i].filename === displayedImageSrc) {
+                //console.log("zhoduje sa")
+                console.log("index i:", i);
+                return i;
             }
         }
     }
 
 
     nextImage.addEventListener("click", () => {
-        getIndex();
+        console.log("indexNextImage")
+        if (isNaN(index))
+            index = getIndex();
         index++;
         //console.log("index - next image",index)
         slideShow();
@@ -213,7 +246,8 @@
     })
 
     prevImage.addEventListener("click", () => {
-        getIndex();
+        if (isNaN(index))
+            index = getIndex();
         index--;
         //console.log("index previous image",index)
         clearTimeout(animate);
@@ -222,7 +256,8 @@
     })
 
     slideShowButton.addEventListener("click", () => {
-        getIndex();
+        if (isNaN(index))
+            index = getIndex();
         console.log(index);
         startAnimation = true;
         modalPodObrazkom.style.backgroundColor = "rgba(255,255,255,0.1)";
@@ -246,6 +281,13 @@
 
         //console.log(displayedImage)
 
+        let pole;
+        pole = (JSON.parse(localStorage.getItem("filterImages")));
+
+        console.log("indexSlideShow", index)
+        if (isNaN(index) || index == null)
+            index = getIndex();
+
         if (index >= pole.length){
             index = 0;
             //console.log("INDEX>0")
@@ -253,6 +295,7 @@
             index = pole.length - 1;
         }
 
+        console.log(pole)
         displayedImage.style.display = "none";
         displayedImage = document.createElement("img")
 
